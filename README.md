@@ -1,20 +1,83 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+# Brain Tumor Classification Project
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+## Project Overview
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+This project implements a **brain tumor binary classification system** using two approaches:
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+1. **Convolutional Neural Network (CNN)** – classifies brain tumor images directly.
+2. **Machine Learning (ML)** – classifies brain tumors based on **patient features**, such as age, gender, and symptoms (e.g., balance loss, sleep problems, headache).
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+The project is modular and organized into **pipelines, models, notebooks, and a FastAPI server** for serving predictions.
+
+---
+
+## Features
+
+### CNN Approach:
+
+- **Input:** Brain MRI images
+- **Architecture:** Custom CNN (or pre-trained model can be integrated)
+- **Output:** Binary classification (Tumor / No Tumor)
+- **Workflow:** `preprocess → train → evaluate → save_model`
+
+### ML Approach:
+
+- **Input:** Patient features, such as:
+  - Age
+  - Gender
+  - Symptoms: balance loss, sleep problems, headache...etc.
+- **Algorithms:** Scikit-learn classifiers (e.g., Random Forest, SVM)
+- **Output:** Binary classification (Tumor / No Tumor)
+- **Workflow:** `preprocess → train → evaluate → save_model`
+
+---
+
+## Getting Started
+
+### Requirements
+
+- Python 3.10+
+- TensorFlow / Keras
+- scikit-learn
+- FastAPI
+- joblib, numpy, pandas, matplotlib, etc.
+
+```bash
+pip install -r requirements.txt
+```
+
+## Running Pipelines
+
+- CNN Pipeline
+
+```bach
+python pipelines/run_cnn_pipeline.py
+```
+
+- ML Pipeline
+
+```bash
+python pipelines/run_ml_pipeline.py
+```
+
+### Both pipelines will:
+
+1.  Preprocess data
+
+2.  Train the model
+
+3.  Evaluate performance
+
+4.  Save the model to the models/ folder
+
+## Starting the FastAPI Server
+
+```bash
+uvicorn server.main:app --reload
+```
+
+## Running Streamlit Inference App
+
+```bash
+streamlit run inference_app/app.py
+```
