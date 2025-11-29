@@ -79,5 +79,5 @@ uvicorn server.main:app --reload
 ## Running Streamlit Inference App
 
 ```bash
-streamlit run inference_app/app.py
+streamlit run inference/app.py
 ```
