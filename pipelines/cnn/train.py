@@ -24,7 +24,8 @@ def train(train_data,validation_data,checkpoint_path):
     early_stopping = EarlyStopping(patience=10,restore_best_weights=True)
     rd=ReduceLROnPlateau(patience=10)
     model =build_and_compile()
-    return model.fit(train_data,batch_size=16,epochs=50,validation_data=validation_data,callbacks=[checkpoints,early_stopping,rd])
+    model.fit(train_data,batch_size=16,epochs=50,validation_data=validation_data,callbacks=[checkpoints,early_stopping,rd])
+    return model
     
     
 
