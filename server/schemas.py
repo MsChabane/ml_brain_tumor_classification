@@ -50,8 +50,9 @@ class input_ml  (BaseModel):
     muscle: Four_Classes
     @field_validator("age")
     def validate_age(cls,age):
+        
         if age<=0 or age >130:
-            raise ValueError("Invalid age value")
-        return age 
+            raise ValueError("age value must be between 0 and 130!")
+        return int(age) 
 
 
