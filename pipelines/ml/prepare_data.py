@@ -1,8 +1,8 @@
 import pandas as pd 
 from sklearn.preprocessing import LabelEncoder 
 from sklearn.model_selection import train_test_split
-from load_data import load_data
-from clean import clean_data
+from .load_data import load_data
+from .clean import clean_data
 import joblib
 
 
