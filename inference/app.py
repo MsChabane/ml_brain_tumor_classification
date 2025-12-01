@@ -83,7 +83,7 @@ def show_results(model_name):
     if os.path.exists(roc_path):
         try:
             roc_img = Image.open(roc_path)
-            st.image(roc_img, caption=f"{model_name} ROC Curve", use_column_width=True)
+            st.image(roc_img, caption=f"{model_name} ROC Curve",  width='stretch')
         except:
             st.error("❌ Cannot load ROC image!")
     else:
@@ -95,7 +95,7 @@ def show_results(model_name):
     if os.path.exists(cm_path):
         try:
             cm_img = Image.open(cm_path)
-            st.image(cm_img, caption=f"{model_name} Confusion Matrix", use_column_width=True)
+            st.image(cm_img, caption=f"{model_name} Confusion Matrix",  width='stretch')
         except:
             st.error("❌ Cannot load confusion matrix image!")
     else:
