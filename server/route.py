@@ -1,27 +1,32 @@
 import os
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-
-
-from fastapi import APIRouter,UploadFile,File
+from fastapi import APIRouter,UploadFile,File,Depends
 import tensorflow as tf
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input #type: ignore 
-from .schemas import PredictionResponse
-from .schemas import input_ml
+from .schemas import PredictorOut,input_ml
+import uuid
 import io
 import joblib
 import numpy as np
 import pandas as pd
+from .models import Predictor
+from .db import AsyncSession,get_session
 
 MODEL_PATH = "models/cnn/model.keras"
 model = tf.keras.models.load_model(MODEL_PATH)
-
+MODEL_ML_PATH = "models/ml/model.pkl"
+ENCODE_GENDER_PATH ="models/ml/gender_encoder.pkl"
+ENCODE_SEIZ_PATH ="models/ml/seizures_encoder.pkl"
+model_ml = joblib.load(MODEL_ML_PATH)
+encode_gender=joblib.load(ENCODE_GENDER_PATH)
+encode_seiz=joblib.load(ENCODE_SEIZ_PATH)
 
 
 router =APIRouter()
 
-@router.post("/predict/cnn", response_model=PredictionResponse)
-async def predict_cnn(image: UploadFile = File(...)):
+@router.post("/predict/cnn", response_model=PredictorOut)
+async def predict_cnn(patient_id:uuid.UUID,image: UploadFile = File(...),session:AsyncSession=Depends(get_session)):
     contents = await image.read()
     img = tf.keras.preprocessing.image.load_img(
         io.BytesIO(contents),
@@ -34,18 +39,32 @@ async def predict_cnn(image: UploadFile = File(...)):
     prob_yes = round(float(preds),4)
     prob_no =round(float(1-prob_yes),4)
     prediction_label = "yes" if prob_yes >= 0.5 else "no"
-    return PredictionResponse( prediction=prediction_label,probability_class_yes=prob_yes,probability_class_no=prob_no )
+    accuracy = prob_yes if prediction_label == "yes" else prob_no
+    cnn_hyperparams = {
+    "img_size": (224, 224),
+    "learning_rate": 0.001,
+    "batch_size": 16,
+    "optimizer": "adam",
+    "loss": "binary_crossentropy",
+    "epochs": 50,
+    "architecture": "MobileNetV2"   
+}
+    predict_cnn=Predictor(
+        patient_id=str(patient_id),
+        model_name='Cnn',
+        params=cnn_hyperparams,
+        prediction=prediction_label,
+        accuracy=accuracy
+    )
+    session.add(predict_cnn)
+    await session.commit()
+    return predict_cnn
 
-MODEL_ML_PATH = "models/ml/model.pkl"
-ENCODE_GENDER_PATH ="models/ml/gender_encoder.pkl"
-ENCODE_SEIZ_PATH ="models/ml/seizures_encoder.pkl"
-model_ml = joblib.load(MODEL_ML_PATH)
-encode_gender=joblib.load(ENCODE_GENDER_PATH)
-encode_seiz=joblib.load(ENCODE_SEIZ_PATH)
 
 
-@router.post("/predict/ml", response_model=PredictionResponse)
-async def predict_ml(input_data:input_ml):
+
+@router.post("/predict/ml", response_model=PredictorOut)
+async def predict_ml(input_data:input_ml,session:AsyncSession=Depends(get_session)):
     input={
         'age':input_data.age, 
         'gender': input_data.gender,
@@ -71,14 +90,26 @@ async def predict_ml(input_data:input_ml):
 
     preds = model_ml.predict_proba(df)[0]
 
-    pred_no = round(float(preds[0]),4)
-    pred_yes = round(float(preds[1]),4)
-    prediction_label = "yes" if pred_yes >= pred_no else "no"
-
-    return PredictionResponse(
+    proba_no = round(float(preds[0]),4)
+    proba_yes = round(float(preds[1]),4)
+    prediction_label,accuracy = ("yes",proba_yes) if proba_yes >= proba_no else ("no",proba_no)
+    
+    ml_hyperparams = {
+        "penalty":"l2",
+        "C":0.5,
+        "solver":"lbfgs",
+        "max_iter":1000,
+        "random_state":42   
+    }
+    predict_ml=Predictor(
+        patient_id=str(input_data.patient_id),
+        model_name='LogisticRegression',
+        params=ml_hyperparams,
         prediction=prediction_label,
-        probability_class_yes=pred_yes,
-        probability_class_no=pred_no
+        accuracy=accuracy 
     )
+    session.add(predict_ml)
+    await session.commit()
+    return predict_ml
 
 
