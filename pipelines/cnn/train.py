@@ -1,9 +1,9 @@
-from tensorflow.keras.applications import MobileNetV2
-from tensorflow.keras.layers import Dense, GlobalAveragePooling2D,Dropout
-from tensorflow.keras.models import Model
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
-from tensorflow.keras.metrics import AUC
+from tensorflow.keras.applications import MobileNetV2 #type: ignore
+from tensorflow.keras.layers import Dense, GlobalAveragePooling2D,Dropout #type: ignore
+from tensorflow.keras.models import Model #type: ignore
+from tensorflow.keras.optimizers import Adam #type: ignore
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau #type: ignore
+from tensorflow.keras.metrics import AUC #type: ignore
 
 
 def build_and_compile()->Model:
