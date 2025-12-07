@@ -1,6 +1,5 @@
 from pydantic import BaseModel,Field,field_validator
 from enum import Enum 
-import uuid
 
 class Gender(str,Enum):
     M='M'
@@ -30,7 +29,7 @@ class Seizures(str,Enum):
     
 
 class input_ml  (BaseModel):
-    patient_id:uuid.UUID
+    
     age: int =Field()
     gender: Gender =Field()
     antecedents: Four_Classes
@@ -54,9 +53,7 @@ class input_ml  (BaseModel):
             raise ValueError("age value must be between 0 and 130!")
         return int(age) 
 
-class PredictorOut(BaseModel):
-    id:uuid.UUID 
-    patient_id: str
+class Predictor(BaseModel):
     model_name: str
     params: dict
     accuracy:float

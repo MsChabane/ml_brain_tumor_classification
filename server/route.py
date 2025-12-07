@@ -4,14 +4,13 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 from fastapi import APIRouter,UploadFile,File,Depends
 import tensorflow as tf
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input #type: ignore 
-from .schemas import PredictorOut,input_ml
+from .schemas import Predictor,input_ml
 import uuid
 import io
 import joblib
 import numpy as np
 import pandas as pd
-from .models import Predictor
-from .db import AsyncSession,get_session
+
 
 MODEL_PATH = "models/cnn/model.keras"
 model = tf.keras.models.load_model(MODEL_PATH)
@@ -25,8 +24,8 @@ encode_seiz=joblib.load(ENCODE_SEIZ_PATH)
 
 router =APIRouter()
 
-@router.post("/predict/cnn", response_model=PredictorOut)
-async def predict_cnn(patient_id:uuid.UUID,image: UploadFile = File(...),session:AsyncSession=Depends(get_session)):
+@router.post("/predict/cnn", response_model=Predictor)
+async def predict_cnn(image: UploadFile = File(...)):
     contents = await image.read()
     img = tf.keras.preprocessing.image.load_img(
         io.BytesIO(contents),
@@ -50,21 +49,19 @@ async def predict_cnn(patient_id:uuid.UUID,image: UploadFile = File(...),session
     "architecture": "MobileNetV2"   
 }
     predict_cnn=Predictor(
-        patient_id=str(patient_id),
         model_name='Cnn',
         params=cnn_hyperparams,
         prediction=prediction_label,
         accuracy=accuracy
     )
-    session.add(predict_cnn)
-    await session.commit()
+    
     return predict_cnn
 
 
 
 
-@router.post("/predict/ml", response_model=PredictorOut)
-async def predict_ml(input_data:input_ml,session:AsyncSession=Depends(get_session)):
+@router.post("/predict/ml", response_model=Predictor)
+async def predict_ml(input_data:input_ml):
     input={
         'age':input_data.age, 
         'gender': input_data.gender,
@@ -102,14 +99,12 @@ async def predict_ml(input_data:input_ml,session:AsyncSession=Depends(get_sessio
         "random_state":42   
     }
     predict_ml=Predictor(
-        patient_id=str(input_data.patient_id),
+        
         model_name='LogisticRegression',
         params=ml_hyperparams,
         prediction=prediction_label,
         accuracy=accuracy 
     )
-    session.add(predict_ml)
-    await session.commit()
     return predict_ml
 
 
